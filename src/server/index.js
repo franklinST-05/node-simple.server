@@ -6,9 +6,14 @@ class Server {
     server = null;
 
     route(method, path, callback) {
-        this.routes[path] = (req, res) => {
-            if (req.url === path && req.method === method) {
-                return callback(req, res);
+
+        this.routes[method + path] = {
+            method: method,
+            path: path,
+            action: (req, res) => {
+                if (req.url === path && req.method === method) {
+                    return callback(req, res);
+                }
             }
         }
     }
@@ -16,8 +21,10 @@ class Server {
     listen(port, host, callback) {
 
         this.server = http.createServer((req, res) => {
-            if(this.routes[req.url]) {
-                this.routes[req.url](req, res);
+            const route = this.routes[req.method + req.url];
+
+            if (route) {
+                route.action(req, res);
             } else {
                 res.statusCode = 404;
                 res.end();
